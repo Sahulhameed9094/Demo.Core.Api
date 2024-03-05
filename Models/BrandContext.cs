@@ -1,15 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Demo.Core.Api.TenantService;
+using Microsoft.EntityFrameworkCore;
 
 namespace Demo.Core.Api.Models
 {
     public class BrandContext : DbContext
     {
-        public BrandContext(DbContextOptions<BrandContext> options) : base(options) 
-        {
+        private readonly TenantProvider _tenantProvider;
+        private readonly int _tenantId;
 
+
+        public BrandContext(DbContextOptions<BrandContext> options,
+            TenantProvider tenantProvider) : base(options)
+        {
+            _tenantProvider = tenantProvider;
+            _tenantId = tenantProvider.GetTenantId();
         }
 
-        DbSet<Brand> Brands { get; set; }
-        
+        public DbSet<Brand> Brands { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Brand>().HasQueryFilter(o => o.TenantId == _tenantId);
+        }
+
     }
 }

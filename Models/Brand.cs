@@ -9,5 +9,7 @@
 
         public int IsActive { get; set; }
 
+        public int TenantId { get; set; }
+
     }
 }
