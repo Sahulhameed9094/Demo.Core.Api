@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Demo.Core.Api.Models;
+using Microsoft.Extensions.Caching.Distributed;
+using Demo.Core.Api.Cache;
 
 namespace Demo.Core.Api.Controllers
 {
@@ -14,31 +16,42 @@ namespace Demo.Core.Api.Controllers
     public class BrandsController : ControllerBase
     {
         private readonly BrandContext _context;
-
-        public BrandsController(BrandContext context)
+        private readonly IDistributedCache _cache;
+        public BrandsController(BrandContext context,
+            IDistributedCache distributedCache)
         {
             _context = context;
+            _cache = distributedCache;
         }
 
         // GET: api/Brands
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Brand>>> GetBrands()
+        public async Task<ActionResult<List<Brand>>> GetBrands()
         {
-          if (_context.Brands == null)
-          {
-              return NotFound();
-          }
-            return await _context.Brands.ToListAsync();
+            var cacheKey = "GET_ALL_STUDENTS";
+            if (_context.Brands == null)
+            {
+                return NotFound();
+            }
+
+            var data = await _cache.GetRecordAsync<List<Brand>>(cacheKey);
+            if (data is null)
+            {
+                Thread.Sleep(10000);
+                data = _context.Brands.ToList();
+                await _cache.SetRecordAsync(cacheKey, data);
+            }
+            return data;
         }
 
         // GET: api/Brands/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Brand>> GetBrand(int id)
         {
-          if (_context.Brands == null)
-          {
-              return NotFound();
-          }
+            if (_context.Brands == null)
+            {
+                return NotFound();
+            }
             var brand = await _context.Brands.FindAsync(id);
 
             if (brand == null)
@@ -85,10 +98,10 @@ namespace Demo.Core.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Brand>> PostBrand(Brand brand)
         {
-          if (_context.Brands == null)
-          {
-              return Problem("Entity set 'BrandContext.Brands'  is null.");
-          }
+            if (_context.Brands == null)
+            {
+                return Problem("Entity set 'BrandContext.Brands'  is null.");
+            }
             _context.Brands.Add(brand);
             await _context.SaveChangesAsync();
 

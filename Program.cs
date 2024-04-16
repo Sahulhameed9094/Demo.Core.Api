@@ -1,5 +1,6 @@
 using Demo.Core.Api.Models;
 using Demo.Core.Api.TenantService;
+using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,10 +14,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<TenantProvider>();
-builder.Services.Configure<TenantConnectionString>(options =>
-builder.Configuration.GetSection(nameof(TenantConnectionString)
-).Bind(options));
-
+builder.Services.Configure<TenantConnectionString>(options => builder.Configuration.GetSection(nameof(TenantConnectionString)).Bind(options));
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnectionStrings");
+    options.InstanceName = "localRedis_";
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

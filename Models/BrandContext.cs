@@ -31,7 +31,8 @@ namespace Demo.Core.Api.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Set Tenant id in queryfilter for global Brand Table
-            modelBuilder.Entity<Brand>().HasQueryFilter(o => o.TenantId == _tenantId);
+            //sinbgle
+            //modelBuilder.Entity<Brand>().HasQueryFilter(o => o.TenantId == _tenantId);
         }
 
     }

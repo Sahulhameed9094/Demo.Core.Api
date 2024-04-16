@@ -24,7 +24,8 @@ namespace Demo.Core.Api.TenantService
             {
                 return Convert.ToInt32(tenandidHeader);
             }
-            return 0;
+            // SET 0 IF USING MULTITENANTE
+            return 1;
         }
 
 
